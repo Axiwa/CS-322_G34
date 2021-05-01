@@ -1,0 +1,32 @@
+con_num,lighting,road_surf
+0,daylight,dry
+1,,dry
+2,dusk or dawn,dry
+3,dark with street lights,dry
+4,dark with no street lights,dry
+5,daylight,wet
+6,daylight,snowy
+7,dark with no street lights,wet
+8,dark with street lights,wet
+9,daylight,
+10,dark with street lights,snowy
+11,dusk or dawn,wet
+12,dark with street lights,
+13,dark with no street lights,snowy
+14,,snowy
+15,dusk or dawn,
+16,,
+17,dark with street lights not functioning,wet
+18,dark with street lights not functioning,dry
+19,dark with no street lights,slippery
+20,,wet
+21,dusk or dawn,snowy
+22,daylight,slippery
+23,dark with no street lights,
+24,dark with street lights,slippery
+25,dusk or dawn,slippery
+26,dark with street lights not functioning,snowy
+27,,slippery
+28,dark with street lights not functioning,slippery
+29,dark with street lights not functioning,
+30,daylight,H

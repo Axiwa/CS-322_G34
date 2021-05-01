@@ -1,0 +1,9 @@
+road_num,road_con
+0,construction
+1,flooded
+2,holes
+3,loose material
+4,normal
+5,obstruction
+6,other
+7,reduced width

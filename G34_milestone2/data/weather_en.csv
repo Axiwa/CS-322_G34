@@ -1,0 +1,8 @@
+wea_num,weather
+0,clear
+1,cloudy
+2,fog
+3,other
+4,raining
+5,snowing
+6,wind
