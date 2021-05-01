@@ -1,5 +1,8 @@
 -- Must be Ordered!
 
+-- To change the date format to YYYY-MM-DD HH24:MI:SS
+ALTER SESSION SET nls_date_format = 'YYYY-MM-DD HH24:MI:SS'
+
 CREATE TABLE Other_fac_en(
 other_fac_num INTEGER,
 other_fac VARCHAR2(3),
