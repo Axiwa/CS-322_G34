@@ -7,12 +7,15 @@ create index ix_ve on vehicle(ve_type)
 create index loc_in_case on case(loc_num)
 create index ve_case_ix on party_involve(case_id, ve_num)
 create index ve_party_ix on party_involve(party_id, ve_num)
-create index vic_age_ix on associate_victim(vic_age);
+create index ix_age on associate_victim(vic_age);
 create index vic_injury_ix on associate_victim(vic_id, deg_injury)
 create index vic_partyid on associate_victim(vic_id, party_id)
 create index vic_age_id on associate_victim(vic_id, vic_age)
+create index party_case_id on party_involve(party_id, case_id)
+create index case_in_party on party_involve(case_id)
 
 
+alter index case_in_party invisible
 alter index age_ix invisible
 alter index case_coltype_ix invisible
 alter index case_loc_ix invisible
@@ -105,24 +108,26 @@ FETCH FIRST 1 ROWS ONLY)
 
 
 --5
-
 alter index ve_case_ix visible
 alter index ve_party_ix visible
 alter index case_loc_ix visible
 
+explain plan for 
 SELECT COUNT(VE_TYPE) AS NUM_VE_TYPE
 FROM
     (SELECT VE_TYPE, COUNT(COUNTY_CITY) AS CITY_NUM
     FROM
-        (SELECT DISTINCT VE_TYPE, COUNTY_CITY, COUNT(*) OVER(PARTITION BY VE_TYPE,COUNTY_CITY) AS CASE_NUM
+        (SELECT DISTINCT VE_TYPE, COUNTY_CITY, COUNT(*) AS CASE_NUM
         FROM VEHICLE, PARTY_INVOLVE, CASE, LOCATION
         WHERE VEHICLE.VE_NUM=PARTY_INVOLVE.VE_NUM
             AND PARTY_INVOLVE.CASE_ID=CASE.CASE_ID
-            AND LOCATION.LOC_NUM=CASE.LOC_NUM)CITY
+            AND LOCATION.LOC_NUM=CASE.LOC_NUM
+            GROUP BY VE_TYPE, COUNTY_CITY)CITY
     WHERE CASE_NUM >=10
     GROUP BY VE_TYPE) COUNT_CITY,
     (SELECT COUNT(DISTINCT COUNTY_CITY) AS TOTAL_CITY FROM LOCATION) TOTAL
 WHERE CITY_NUM>= TOTAL_CITY/2
+
 
 
 alter index ve_case_ix invisible
@@ -130,10 +135,12 @@ alter index ve_party_ix invisible
 alter index case_loc_ix invisible
 
 --6
-
-alter index case_loc_ix visible
+alter index case_in_party visible
 alter index loc_in_case visible
+alter index county_city_ix_test visible
+alter index party_case_id visible
 
+explain plan for
 SELECT COUNTY_CITY, POPULATION, CASE_ID, AVG_AGE
 FROM
     (SELECT COUNTY_CITY, POPULATION, CASE_ID, AVG_AGE, ROW_NUMBER() OVER(PARTITION BY COUNTY_CITY ORDER BY AVG_AGE ASC) AS ROW_NUMBER
@@ -164,13 +171,16 @@ FROM
 WHERE ROW_NUMBER<=10
 ORDER BY COUNTY_CITY, ROW_NUMBER
 
-alter index case_loc_ix invisible
-alter index loc_in_case invisible
+select * from table(dbms_xplan.display)
 
+alter index loc_in_case invisible
+alter index county_city_ix invisible
+alter index party_case_id invisible
 --7 
-alter index vic_age_id visible
-alter index IX_AGE visible
+
 alter index case_coltype_ix visible 
+alter index party_case_id visible 
+
 
 SELECT DISTINCT CASE_ID, MAX(VIC_AGE) OVER(PARTITION BY CASE_ID) AS ELDEST
 FROM
@@ -185,7 +195,8 @@ WHERE MIN_AGE>100
 ORDER BY CASE_ID
 
 alter index case_coltype_ix invisible 
-alter index IX_AGE invisible
+alter index party_case_id invisible 
+
 
 --8
 
@@ -232,8 +243,6 @@ COL_PERIOD AS
     (
     SELECT
     CASE
---    WHEN CASE.LIGHTING LIKE '%dawn%' THEN 'DAWN'
---    WHEN CASE.LIGHTING LIKE '%dusk%' THEN 'DUSK'
     WHEN CASE.LIGHTING LIKE '%day%' THEN 'DAY'
     WHEN CASE.LIGHTING LIKE '%dark%' THEN 'NIGHT'
     ELSE 
@@ -265,33 +274,3 @@ ORDER BY N_COLLISION DESC
 
 
 --============================================================================================================
-
---SELECT COUNTY_CITY, POPULATION, CASE_ID, AVG_AGE
---FROM
---    (SELECT COUNTY_CITY, POPULATION, CASE_ID, AVG_AGE, ROW_NUMBER() OVER(PARTITION BY COUNTY_CITY ORDER BY AVG_AGE ASC) AS ROW_NUMBER
---    FROM
---        (SELECT DISTINCT COL_CITY.COUNTY_CITY, COL_CITY.POPULATION, CASE.CASE_ID, AVG(VIC_AGE) OVER(PARTITION BY CASE.CASE_ID) AS AVG_AGE
---        FROM
---            (SELECT DISTINCT COUNTY_CITY, POPULATION
---                FROM LOCATION 
---                order by (case population
---                    when 7 then 0
---                    when 6 then 1
---                    when 5 then 2
---                    when 4 then 3 
---                    when 3 then 4
---                    when 2 then 5
---                    when 1 then 6 
---                    when 9 then 7
---                    when 0 then 8
---                    else 9 end)                
---                FETCH FIRST 3 ROWS ONLY) COL_CITY,
---                LOCATION, CASE, PARTY_INVOLVE, ASSOCIATE_VICTIM 
---        WHERE COL_CITY.county_city=LOCATION.county_city
---            AND CASE.LOC_NUM=LOCATION.LOC_NUM
---            AND PARTY_INVOLVE.CASE_ID=CASE.CASE_ID
---            AND ASSOCIATE_VICTIM.PARTY_ID=PARTY_INVOLVE.PARTY_ID
---            AND VIC_AGE IS NOT NULL)AGE)RANK_AGE
---WHERE ROW_NUMBER<=10
---ORDER BY COUNTY_CITY, ROW_NUMBER
-
